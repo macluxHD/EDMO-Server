@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.bug.st/serial"
 )
@@ -58,6 +59,7 @@ func server(w http.ResponseWriter, r *http.Request) {
 var port serial.Port
 
 func main() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to load .env file")

@@ -23,9 +23,13 @@ var upgrader = websocket.Upgrader{
 }
 
 type WebsocketMessage struct {
-	Type    string `json:"type"`
-	Index   int    `json:"index"`
-	Degrees int    `json:"degrees"`
+	Type string          `json:"type"`
+	Data json.RawMessage `json:"data"`
+}
+
+type SetArmAngleData struct {
+	Index   int `json:"index"`
+	Degrees int `json:"degrees"`
 }
 
 func server(w http.ResponseWriter, r *http.Request) {
@@ -90,17 +94,24 @@ func main() {
 func handleWebSocketMessage(msg WebsocketMessage) {
 	switch msg.Type {
 	case "setArmAngle":
+		var data SetArmAngleData
+		err := json.Unmarshal(msg.Data, &data)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to unmarshal setArmAngle data")
+			return
+		}
+
 		// Map index: 0->1, 1->2
-		servoNum := msg.Index + 1
+		servoNum := data.Index + 1
 
 		// Map degrees: 0->90, 90->180, -90->0
-		mappedDegrees := msg.Degrees + 90
+		mappedDegrees := data.Degrees + 90
 
-		log.Info().Msgf("Rotating servo %d to %d degrees (original: %d)", servoNum, mappedDegrees, msg.Degrees)
+		log.Info().Msgf("Rotating servo %d to %d degrees (original: %d)", servoNum, mappedDegrees, data.Degrees)
 
 		// Send as text: "servo1 90\n"
 		command := fmt.Sprintf("servo%d %d\n", servoNum, mappedDegrees)
-		_, err := port.Write([]byte(command))
+		_, err = port.Write([]byte(command))
 		if err != nil {
 			log.Error().Err(err).Msg("failed to write to serial port")
 			return

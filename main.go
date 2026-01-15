@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -33,6 +34,14 @@ type SetArmAngleData struct {
 	Degrees int `json:"degrees"`
 }
 
+type OscillatorUpdateData struct {
+	Index      int     `json:"index"`
+	Frequency  float32 `json:"frequency"`
+	Amplitude  float32 `json:"amplitude"`
+	Offset     float32 `json:"offset"`
+	PhaseShift float32 `json:"phaseShift"`
+}
+
 func server(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -57,39 +66,55 @@ func server(w http.ResponseWriter, r *http.Request) {
 }
 
 var port serial.Port
+var mock bool
 
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	err := godotenv.Load()
-	if err != nil {
+
+	if err := godotenv.Load(); err != nil {
 		log.Fatal().Err(err).Msg("failed to load .env file")
 	}
 
 	serialPort := os.Getenv("SERIAL_PORT")
 	baudRateStr := os.Getenv("BAUD_RATE")
+	mock = os.Getenv("MOCK") == "true"
 	baudRate, err := strconv.Atoi(baudRateStr)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to parse BAUD_RATE")
 	}
 
-	mode := &serial.Mode{
-		BaudRate: baudRate,
-		Parity:   serial.NoParity,
-		DataBits: 8,
-		StopBits: serial.OneStopBit,
+	if !mock {
+		mode := &serial.Mode{
+			BaudRate: baudRate,
+			Parity:   serial.NoParity,
+			DataBits: 8,
+			StopBits: serial.OneStopBit,
+		}
+
+		port, err = serial.Open(serialPort, mode)
+		if err != nil {
+			log.Fatal().Err(err).Msgf("failed to open port %s", serialPort)
+		}
+
+		// send startup commands to EDMO robot and start listening for incoming packets
+		startEDMO()
 	}
 
-	port, err = serial.Open(serialPort, mode)
-	if err != nil {
-		log.Fatal().Err(err).Msgf("failed to open port %s", serialPort)
-	}
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigChan
+		log.Info().Msgf("received signal: %s, shutting down…", sig)
+		if !mock {
+			shutdownEDMO()
+		}
+		os.Exit(0)
+	}()
 
 	flag.Parse()
-
 	http.HandleFunc("/", server)
-
 	log.Info().Msgf("Starting server on %s", *addr)
-
 	log.Fatal().Err(http.ListenAndServe(*addr, nil))
 }
 
@@ -103,20 +128,29 @@ func handleWebSocketMessage(msg WebsocketMessage) {
 			return
 		}
 
-		// Map index: 0->1, 1->2
-		servoNum := data.Index + 1
+		servoNum := data.Index
 
 		// Map degrees: 0->90, 90->180, -90->0
 		mappedDegrees := data.Degrees + 90
 
 		log.Info().Msgf("Rotating servo %d to %d degrees (original: %d)", servoNum, mappedDegrees, data.Degrees)
 
-		// Send as text: "servo1 90\n"
-		command := fmt.Sprintf("servo%d %d\n", servoNum, mappedDegrees)
-		_, err = port.Write([]byte(command))
+		if !mock {
+			oscillatorUpdate(byte(servoNum), float32(2000), 0.1, float32(mappedDegrees), 0)
+		}
+	case "setOscillator":
+		var data OscillatorUpdateData
+		err := json.Unmarshal(msg.Data, &data)
 		if err != nil {
-			log.Error().Err(err).Msg("failed to write to serial port")
+			log.Error().Err(err).Msg("failed to unmarshal setOscillator data")
 			return
+		}
+
+		log.Info().Msgf("Updating oscillator %d: freq=%.2f, amp=%.2f, offset=%.2f, phaseShift=%.2f",
+			data.Index, data.Frequency, data.Amplitude, data.Offset, data.PhaseShift)
+
+		if !mock {
+			oscillatorUpdate(byte(data.Index), data.Frequency, data.Amplitude, data.Offset, data.PhaseShift)
 		}
 	default:
 		log.Warn().Msgf("Unknown message type: %s", msg.Type)

@@ -136,7 +136,7 @@ func handleWebSocketMessage(msg WebsocketMessage) {
 		log.Info().Msgf("Rotating servo %d to %d degrees (original: %d)", servoNum, mappedDegrees, data.Degrees)
 
 		if !mock {
-			oscillatorUpdate(byte(servoNum), float32(2000), 0.1, float32(mappedDegrees), 0)
+			setAngle(byte(servoNum), float32(mappedDegrees))
 		}
 	case "setOscillator":
 		var data OscillatorUpdateData

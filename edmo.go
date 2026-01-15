@@ -165,6 +165,14 @@ func oscillatorUpdate(idx byte, freq, amp, offset, phaseShift float32) error {
 	return writeEDMOPacket(3, buf.Bytes())
 }
 
+func setAngle(idx byte, angle float32) error {
+	buf := bytes.NewBuffer(nil)
+	buf.WriteByte(idx)
+	binary.Write(buf, binary.LittleEndian, angle)
+
+	return writeEDMOPacket(7, buf.Bytes())
+}
+
 func startEDMO() {
 	id := uuid.New().String()
 	if err := identificationCommand(id); err != nil {

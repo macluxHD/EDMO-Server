@@ -188,6 +188,10 @@ func handleWebSocketMessage(msg WebsocketMessage) {
 		if !mock {
 			oscillatorUpdate(byte(data.Index), data.Frequency, data.Amplitude, data.Offset, data.PhaseShift)
 		}
+	case "reset_phase":
+		if !mock {
+			resetPhase()
+		}
 	default:
 		log.Warn().Msgf("Unknown message type: %s", msg.Type)
 	}

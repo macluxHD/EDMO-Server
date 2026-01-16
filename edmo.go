@@ -214,6 +214,11 @@ func endSession() error {
 	return writeEDMOPacket(6, nil)
 }
 
+func resetPhase() error {
+	log.Debug().Msg("sending reset phase command")
+	return writeEDMOPacket(8, nil)
+}
+
 func oscillatorUpdate(idx byte, freq, amp, offset, phaseShift float32) error {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteByte(idx)

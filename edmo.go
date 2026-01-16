@@ -66,6 +66,19 @@ func unescape(data []byte) []byte {
 	return out.Bytes()
 }
 
+func escape(data []byte) []byte {
+	out := bytes.Buffer{}
+
+	for _, b := range data {
+		// Escape header/footer bytes ('E', 'D', 'M', 'O') and the escape character itself ('\\')
+		if b == 'E' || b == 'D' || b == 'M' || b == 'O' || b == '\\' {
+			out.WriteByte('\\')
+		}
+		out.WriteByte(b)
+	}
+	return out.Bytes()
+}
+
 func handlePacket(packet []byte) {
 	// Unescape (EDMO escapes header/footer bytes in the payload)
 	raw := unescape(packet)
@@ -111,11 +124,9 @@ func writeEDMOPacket(cmd byte, payload []byte) error {
 
 	buf.Write([]byte("ED"))
 
-	buf.WriteByte(cmd)
-
-	if payload != nil {
-		buf.Write(payload)
-	}
+	// Escape the command and payload to avoid header/footer bytes corrupting the packet
+	escapedPayload := escape(append([]byte{cmd}, payload...))
+	buf.Write(escapedPayload)
 
 	buf.Write([]byte("MO"))
 

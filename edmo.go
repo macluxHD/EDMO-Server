@@ -95,11 +95,60 @@ func handlePacket(packet []byte) {
 		log.Debug().Msgf("Received command 69 with %d payload bytes", len(payload))
 
 		if len(payload) >= 4+4+4 {
-			a := binary.LittleEndian.Uint32(payload[0:4])
-			b := math.Float32frombits(binary.LittleEndian.Uint32(payload[4:8]))
-			c := math.Float32frombits(binary.LittleEndian.Uint32(payload[8:12]))
-			d := math.Float32frombits(binary.LittleEndian.Uint32(payload[12:16]))
-			log.Debug().Msgf("Cmd69 parsed: Time=%d, Frequency=%.2f, Amplitude=%.2f, Offset=%.2f", a, b, c, d)
+			time := binary.LittleEndian.Uint32(payload[0:4])
+			frequency_0 := math.Float32frombits(binary.LittleEndian.Uint32(payload[4:8]))
+			amplitude_0 := math.Float32frombits(binary.LittleEndian.Uint32(payload[8:12]))
+			offset_0 := math.Float32frombits(binary.LittleEndian.Uint32(payload[12:16]))
+			phaseShift_0 := math.Float32frombits(binary.LittleEndian.Uint32(payload[16:20]))
+			phase_0 := math.Float32frombits(binary.LittleEndian.Uint32(payload[20:24]))
+			frequency_1 := math.Float32frombits(binary.LittleEndian.Uint32(payload[24:28]))
+			amplitude_1 := math.Float32frombits(binary.LittleEndian.Uint32(payload[28:32]))
+			offset_1 := math.Float32frombits(binary.LittleEndian.Uint32(payload[32:36]))
+			phaseShift_1 := math.Float32frombits(binary.LittleEndian.Uint32(payload[36:40]))
+			phase_1 := math.Float32frombits(binary.LittleEndian.Uint32(payload[40:44]))
+			frequency_2 := math.Float32frombits(binary.LittleEndian.Uint32(payload[44:48]))
+			amplitude_2 := math.Float32frombits(binary.LittleEndian.Uint32(payload[48:52]))
+			offset_2 := math.Float32frombits(binary.LittleEndian.Uint32(payload[52:56]))
+			phaseShift_2 := math.Float32frombits(binary.LittleEndian.Uint32(payload[56:60]))
+			phase_2 := math.Float32frombits(binary.LittleEndian.Uint32(payload[60:64]))
+			frequency_3 := math.Float32frombits(binary.LittleEndian.Uint32(payload[64:68]))
+			amplitude_3 := math.Float32frombits(binary.LittleEndian.Uint32(payload[68:72]))
+			offset_3 := math.Float32frombits(binary.LittleEndian.Uint32(payload[72:76]))
+			phaseShift_3 := math.Float32frombits(binary.LittleEndian.Uint32(payload[76:80]))
+			phase_3 := math.Float32frombits(binary.LittleEndian.Uint32(payload[80:84]))
+			a := math.Float32frombits(binary.LittleEndian.Uint32(payload[84:88]))
+			gyro_x := math.Float32frombits(binary.LittleEndian.Uint32(payload[92:96]))
+			gyro_y := math.Float32frombits(binary.LittleEndian.Uint32(payload[96:100]))
+			gyro_z := math.Float32frombits(binary.LittleEndian.Uint32(payload[100:104]))
+			f := math.Float32frombits(binary.LittleEndian.Uint32(payload[104:108]))
+			accel_x := math.Float32frombits(binary.LittleEndian.Uint32(payload[112:116]))
+			accel_y := math.Float32frombits(binary.LittleEndian.Uint32(payload[116:120]))
+			accel_z := math.Float32frombits(binary.LittleEndian.Uint32(payload[120:124]))
+			k := math.Float32frombits(binary.LittleEndian.Uint32(payload[124:128]))
+			mag_x := math.Float32frombits(binary.LittleEndian.Uint32(payload[132:136]))
+			mag_y := math.Float32frombits(binary.LittleEndian.Uint32(payload[136:140]))
+			mag_z := math.Float32frombits(binary.LittleEndian.Uint32(payload[140:144]))
+			p := math.Float32frombits(binary.LittleEndian.Uint32(payload[144:148]))
+			grav_x := math.Float32frombits(binary.LittleEndian.Uint32(payload[152:156]))
+			grav_y := math.Float32frombits(binary.LittleEndian.Uint32(payload[156:160]))
+			grav_z := math.Float32frombits(binary.LittleEndian.Uint32(payload[160:164]))
+			u := math.Float32frombits(binary.LittleEndian.Uint32(payload[164:168]))
+			rot_x := math.Float32frombits(binary.LittleEndian.Uint32(payload[172:176]))
+			rot_y := math.Float32frombits(binary.LittleEndian.Uint32(payload[176:180]))
+			rot_z := math.Float32frombits(binary.LittleEndian.Uint32(payload[180:184]))
+			rot_w := math.Float32frombits(binary.LittleEndian.Uint32(payload[184:188]))
+			log.Debug().Msgf("Cmd69 parsed: Time=%d, Frequency(0)=%.2f, Amplitude(0)=%.2f, Offset(0)=%.2f, PhaseShift(0)=%.2f, Phase(0)=%.2f, Frequency(1)=%.2f, Amplitude(1)=%.2f, Offset(1)=%.2f, PhaseShift(1)=%.2f, Phase(1)=%.2f, Frequency(2)=%.2f, Amplitude(2)=%.2f, Offset(2)=%.2f, PhaseShift(2)=%.2f, Phase(2)=%.2f, Frequency(3)=%.2f, Amplitude(3)=%.2f, Offset(3)=%.2f, PhaseShift(3)=%.2f, Phase(3)=%.2f, a=%.2f, Gyro=(%.2f, %.2f, %.2f), f=%.2f, Accel=(%.2f, %.2f, %.2f), k=%.2f, Mag=(%.2f, %.2f, %.2f), p=%.2f, Grav=(%.2f, %.2f, %.2f), u=%.2f, Rot=(%.2f, %.2f, %.2f, %.2f)",
+				time,
+				frequency_0, amplitude_0, offset_0, phaseShift_0, phase_0,
+				frequency_1, amplitude_1, offset_1, phaseShift_1, phase_1,
+				frequency_2, amplitude_2, offset_2, phaseShift_2, phase_2,
+				frequency_3, amplitude_3, offset_3, phaseShift_3, phase_3,
+				a, gyro_x, gyro_y, gyro_z,
+				f, accel_x, accel_y, accel_z,
+				k, mag_x, mag_y, mag_z,
+				p, grav_x, grav_y, grav_z,
+				u, rot_x, rot_y, rot_z, rot_w,
+			)
 		} else {
 			log.Debug().Msgf("Cmd69 raw payload: %x", payload)
 		}

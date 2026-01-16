@@ -3,11 +3,14 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -68,11 +71,44 @@ func server(w http.ResponseWriter, r *http.Request) {
 var port serial.Port
 var mock bool
 
-func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+func setupLogger(logToFile bool) *os.File {
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
 
+	if !logToFile {
+		log.Logger = zerolog.New(consoleWriter).With().Timestamp().Logger()
+		return nil
+	}
+
+	// Create log directory if it doesn't exist
+	logDir := "logs"
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		log.Fatal().Err(err).Msg("failed to create log directory")
+	}
+
+	// Create log file with timestamp
+	logFileName := filepath.Join(logDir, time.Now().Format("2006-01-02_15-04-05")+".log")
+	logFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to open log file")
+	}
+
+	// Create multi-writer for both console and file
+	multi := io.MultiWriter(consoleWriter, logFile)
+
+	log.Logger = zerolog.New(multi).With().Timestamp().Logger()
+
+	return logFile
+}
+
+func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal().Err(err).Msg("failed to load .env file")
+	}
+
+	logToFile := os.Getenv("LOG_TO_FILE") == "true"
+	logFile := setupLogger(logToFile)
+	if logFile != nil {
+		defer logFile.Close()
 	}
 
 	serialPort := os.Getenv("SERIAL_PORT")

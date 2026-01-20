@@ -1,6 +1,6 @@
 # EDMO IDE
 
-A visual programming environment for controlling EDMO modular robots. This project is part of Project 3-1 (BCS3300) at Maastricht University.
+This project is part of Project 3-1 (BCS3300) at Maastricht University.
 
 This server acts as a middleman between the browser based interface and the local connection to the robot to relay commands from the browser to the robot.
 

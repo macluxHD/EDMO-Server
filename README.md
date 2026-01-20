@@ -23,12 +23,12 @@ This server acts as a middleman between the browser based interface and the loca
    cd EDMO-Server
    ```
 
-2. **Copy exampl.env file**
+3. **Copy exampl.env file**
    ```bash
    cp example.env .env
    ```
 
-2. **Edit .env file**
+4. **Edit .env file**
 
     Set to the corresponding port the robot is connected to on your machine.
     
@@ -38,7 +38,7 @@ This server acts as a middleman between the browser based interface and the loca
     SERIAL_PORT = /COM3
     ```
 
-4. **Run the server**
+5. **Run the server**
    ```bash
    go run .
    ```
